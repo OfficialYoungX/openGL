@@ -63,11 +63,11 @@ int main()
     
     
     GLfloat vertices_1[] = {
-        //position_1             // colors            //texture coords
-        ver_1_x,ver_1_y,0.0f,    1.0f, 0.0f, 0.0f,    1.0f,1.0f, // 右上角
-        ver_2_x,ver_2_y,0.0f,    0.0f, 1.0f, 0.0f,    1.0f,0.0f, // 右下角
-        ver_3_x,ver_3_y,0.0f,    0.0f, 0.0f, 1.0f,    0.0f,0.0f, // 左下角
-        ver_4_x,ver_4_y,0.0f,    0.0f, 0.0f, 1.0f,    0.0f,1.0f // 左上角
+        //position_1             // colors
+        ver_1_x,ver_1_y,0.0f,    1.0f, 0.0f, 0.0f,
+        ver_2_x,ver_2_y,0.0f,    0.0f, 1.0f, 0.0f,
+        ver_3_x,ver_3_y,0.0f,    0.0f, 0.0f, 1.0f,
+        ver_4_x,ver_4_y,0.0f,    0.0f, 0.0f, 1.0f,
     };
     
     unsigned int indices_1[]{ // 索引
@@ -90,19 +90,14 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_1), indices_1, GL_STATIC_DRAW);
     // 4. 设定顶点属性指针
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    // texture coord attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
     
     // 定义变换矩阵
-    glm::mat4 transform;
-    transform = glm::rotate(transform, glm::radians(45.0f), glm::vec3(0.0f,0.0f,1.0f));
-    transform = glm::scale(transform, glm::vec3(0.9f,0.9f,0.9f));
+    
     
     //判断窗口是否关闭，不关闭继续执行
     while (!glfwWindowShouldClose(window))
@@ -111,12 +106,13 @@ int main()
         glClearColor(color[0], color[1], color[2], color[3]);//R,G,B,Alpha
         glClear(GL_COLOR_BUFFER_BIT);//上色，背景颜色初始化
         
-        
-        // render container
+        glm::mat4 transform = glm::mat4(1.0f); // 初始化为单位矩阵
         ourShader.Use();
-        
-        transform = glm::rotate(transform, glm::radians(1.0f),glm::vec3(0.0f,0.0f,1.0f));
-        transform = glm::scale(transform, glm::vec3(0.999f,0.999f,0.999f));
+        transform = glm::rotate(transform, glm::radians(45.0f)*static_cast<GLfloat>(glfwGetTime()), glm::vec3(1.0f,1.0f,1.0f));
+        transform = glm::scale(transform, glm::vec3(0.5f,0.5f,0.5f));
+        //        transform = glm::rotate(transform, glm::radians(1.0f),glm::vec3(0.0f,0.0f,1.0f));
+        //        transform = glm::scale(transform, glm::vec3(0.999f,0.999f,0.999f));
+        // 和着色器通讯
         unsigned int transformLoc = glGetUniformLocation(ourShader.Program, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
         
@@ -132,7 +128,6 @@ int main()
     }
     glDeleteVertexArrays(1, &VAO[0]);
     glDeleteBuffers(1, &VBO[0]);
-    glDeleteBuffers(1, &EBO[0]);
     
     glfwTerminate();
     return 0;
