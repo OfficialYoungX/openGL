@@ -70,6 +70,7 @@
 		0441E6142159D22200ED266C /* stbi_DDS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stbi_DDS.h; sourceTree = "<group>"; };
 		0441E6152159D22200ED266C /* pvr_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pvr_helper.h; sourceTree = "<group>"; };
 		0441E61A2159D67400ED266C /* shader */ = {isa = PBXFileReference; lastKnownFileType = folder; path = shader; sourceTree = "<group>"; };
+		0482BC87217EC03B00946EBE /* Camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Camera.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +111,7 @@
 				0441E61A2159D67400ED266C /* shader */,
 				0441E6002159D22200ED266C /* SOIL2 */,
 				0441E5E62150F1FA00ED266C /* main.cpp */,
+				0482BC87217EC03B00946EBE /* Camera.h */,
 				0441E5FF2150F3D100ED266C /* shader.h */,
 			);
 			path = openGL_2;
