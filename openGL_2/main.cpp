@@ -18,15 +18,18 @@
 using namespace std;
 //设置窗口大小
 const GLfloat WIDTH = 600, HEIGHT = 600;
+GLfloat lastX = WIDTH / 2;
+GLfloat lastY = HEIGHT / 2;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 bool keys[1024];
-
 Camera camera(glm::vec3(1.0f,1.0f,2.0f)); // 相机初始化
+bool firstMouse = true;
+
 
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
 void MouseCallback(GLFWwindow *window, GLdouble x, GLdouble y);
-void DoMovement();
+void DoMovement(GLFWwindow *window);
 
 int main()
 {
@@ -38,12 +41,12 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);// for mac
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);// 窗口是否可调整大小，第二个参数表示不允许改变窗口大小
     // 创建窗口对象
-    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "texture B16040517", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "3D-DCA-B16040517", nullptr, nullptr);
     int screenWidth, screenHeight;
     //读取窗口实际上的缓存空间，得到实际大小
     glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
-    glfwSetKeyCallback(window, KeyCallback) // 注册键盘事件
-//    glfwSetMouseButtonCallback(window, MouseCallback); // 注册鼠标事件
+    glfwSetKeyCallback(window, KeyCallback); // 注册键盘事件
+    glfwSetCursorPosCallback(window, MouseCallback); // 注册鼠标事件
     //判断窗口是否创建成功
     if (nullptr == window)
     {
@@ -115,9 +118,9 @@ int main()
     
     // 定义变换矩阵
     
-    glm::mat4 model = glm::rotate(model, -55.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::mat4 view = glm::vec4(1.0f);
-    glm::mat4 projection = glm::perspective(45.0f, screenWidth / screenHeight, 0.1f, 100.0f);
+//    glm::mat4 model = glm::rotate(model, -55.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+//    glm::mat4 view = glm::mat4(1.0f);
+//    glm::mat4 projection = glm::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     
     
     //判断窗口是否关闭，不关闭继续执行
@@ -128,39 +131,39 @@ int main()
         deltaTime = currentTime - lastFrame;
         lastFrame = currentTime;
         
-        const float color[] = {0.0f, 0.0f, 0.0f, 1.0f};
-        glClearColor(color[0], color[1], color[2], color[3]);//R,G,B,Alpha
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);//R,G,B,Alpha
         glClear(GL_COLOR_BUFFER_BIT);//上色，背景颜色初始化
         
-//        glm::mat4 transform = glm::mat4(1.0f); // 初始化为单位矩阵
-        
-        
-        
+        // 激活shader
         ourShader.Use();
         
+        // Get the uniform locations
+        GLint modelLoc = glGetUniformLocation(ourShader.Program, "model");
+        GLint viewLoc = glGetUniformLocation(ourShader.Program, "view");
+        GLint projLoc = glGetUniformLocation(ourShader.Program, "projection");
+        // model
+        glm::mat4 model;
+        model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        // view
+        glm::mat4 view;
+        view = camera.GetViewMatrix();
+        // projection
+        glm::mat4 projection;
+        projection = glm::perspective(camera.Zoom, (float)screenWidth/(float)screenHeight, 0.1f, 1000.0f);
+        // Pass the matrices to the shader
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         
         
-//        transform = glm::rotate(transform, glm::radians(45.0f)*static_cast<GLfloat>(glfwGetTime()), glm::vec3(1.0f,1.0f,1.0f));
-//        transform = glm::scale(transform, glm::vec3(0.5f,0.5f,0.5f));
-        //        transform = glm::rotate(transform, glm::radians(1.0f),glm::vec3(0.0f,0.0f,1.0f));
-        //        transform = glm::scale(transform, glm::vec3(0.999f,0.999f,0.999f));
-        // 和着色器通讯
-//        unsigned int transformLoc = glGetUniformLocation(ourShader.Program, "transform");
-//        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
-        
-//        GLuint alpha_localtion = glGetUniformLocation(ourShader.Program, "alpha");
-//        float timeValue = glfwGetTime();
-//        float alpha = sin(timeValue) / 2.0f + 0.5f;
-//        glUniform1f(alpha_localtion,alpha);
-        glBindVertexArray(VAO[0]); // 绑定**
+        glBindVertexArray(VAO[0]);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        
         glfwSwapBuffers(window);
         glfwPollEvents();
+        DoMovement(window);
     }
     glDeleteVertexArrays(1, &VAO[0]);
     glDeleteBuffers(1, &VBO[0]);
-    
     glfwTerminate();
     return 0;
 }
@@ -177,11 +180,24 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
     }
 }
 
-//void MouseCallback(GLFWwindow *window, GLdouble x, GLdouble y){
-//
-//}
-void DoMovement(){
-    GLfloat cameraSpeed = 0.01f;
+void MouseCallback(GLFWwindow *window, GLdouble x, GLdouble y){
+    if(firstMouse)
+    {
+        lastX = x;
+        lastY = y;
+        firstMouse = false;
+    }
+    
+    GLfloat xoffset = x - lastX;
+    GLfloat yoffset = lastY - y;  // Reversed since y-coordinates go from bottom to left
+    
+    lastX = x;
+    lastY = y;
+    
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void DoMovement(GLFWwindow* window){
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
