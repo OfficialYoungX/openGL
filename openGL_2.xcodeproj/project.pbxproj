@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		041E87C0216B7E14008627C8 /* shader in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0441E61A2159D67400ED266C /* shader */; };
+		04229DB22181AAEA00B1DE7B /* libassimp.4.1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 04229DB12181AAEA00B1DE7B /* libassimp.4.1.0.dylib */; };
 		0441E5E72150F1FA00ED266C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0441E5E62150F1FA00ED266C /* main.cpp */; };
 		0441E5F42150F2C800ED266C /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0441E5F32150F2C800ED266C /* OpenGL.framework */; };
 		0441E5F62150F2D900ED266C /* libGLEW.2.1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0441E5F52150F2D900ED266C /* libGLEW.2.1.0.dylib */; };
@@ -41,6 +42,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		04229DB12181AAEA00B1DE7B /* libassimp.4.1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libassimp.4.1.0.dylib; path = ../../../../../usr/local/Cellar/assimp/4.1.0/lib/libassimp.4.1.0.dylib; sourceTree = "<group>"; };
 		04285FB42175859000AFD703 /* glm */ = {isa = PBXFileReference; lastKnownFileType = folder; path = glm; sourceTree = "<group>"; };
 		0441E5E32150F1FA00ED266C /* openGL_2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = openGL_2; sourceTree = BUILT_PRODUCTS_DIR; };
 		0441E5E62150F1FA00ED266C /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				04229DB22181AAEA00B1DE7B /* libassimp.4.1.0.dylib in Frameworks */,
 				0441E5F82150F2E800ED266C /* libglfw.3.2.dylib in Frameworks */,
 				0441E5F62150F2D900ED266C /* libGLEW.2.1.0.dylib in Frameworks */,
 				0441E5F42150F2C800ED266C /* OpenGL.framework in Frameworks */,
@@ -120,6 +123,7 @@
 		0441E5F22150F2C800ED266C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				04229DB12181AAEA00B1DE7B /* libassimp.4.1.0.dylib */,
 				0441E5F72150F2E800ED266C /* libglfw.3.2.dylib */,
 				0441E5F52150F2D900ED266C /* libGLEW.2.1.0.dylib */,
 				0441E5F32150F2C800ED266C /* OpenGL.framework */,
@@ -335,6 +339,7 @@
 					"$(inherited)",
 					/usr/local/Cellar/glew/2.1.0/lib,
 					/usr/local/Cellar/glfw/3.2.1/lib,
+					/usr/local/Cellar/assimp/4.1.0/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -348,6 +353,7 @@
 					"$(inherited)",
 					/usr/local/Cellar/glew/2.1.0/lib,
 					/usr/local/Cellar/glfw/3.2.1/lib,
+					/usr/local/Cellar/assimp/4.1.0/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
