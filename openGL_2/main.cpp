@@ -31,6 +31,7 @@ bool firstMouse = true;
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
 void MouseCallback(GLFWwindow *window, GLdouble x, GLdouble y);
 void DoMovement(GLFWwindow *window);
+void MouseScrollCallback(GLFWwindow *window, GLdouble xoffset, GLdouble yoffset);
 
 glm::vec3 lightPos = glm::vec3(1.0f,0.0f,2.0f); // 光源位置
 
@@ -50,7 +51,8 @@ int main()
     //读取窗口实际上的缓存空间，得到实际大小
     glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
     glfwSetKeyCallback(window, KeyCallback); // 注册键盘事件
-    glfwSetCursorPosCallback(window, MouseCallback); // 注册鼠标事件
+    glfwSetCursorPosCallback(window, MouseCallback); // 注册鼠标d移动事件
+    glfwSetScrollCallback(window, MouseScrollCallback);
     //判断窗口是否创建成功
     if (nullptr == window)
     {
@@ -173,7 +175,7 @@ int main()
         GLint objectColorLoc = glGetUniformLocation(lightingShader.Program, "objectColor");
         GLint lightColorLoc  = glGetUniformLocation(lightingShader.Program, "lightColor");
         GLint lightPosLoc    = glGetUniformLocation(lightingShader.Program, "lightPos");
-        glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
+        glUniform3f(objectColorLoc, 0.0f, 1.0f, 1.0f);
         glUniform3f(lightColorLoc,  1.0f, 1.0f, 1.0f);
         glUniform3f(lightPosLoc,    lightPos.x, lightPos.y, lightPos.z);
         
@@ -254,7 +256,15 @@ void MouseCallback(GLFWwindow *window, GLdouble x, GLdouble y){
     lastX = x;
     lastY = y;
     
-    camera.ProcessMouseMovement(xoffset, yoffset);
+//    if(xoffset < 0.1){
+//        camera.ProcessMouseMovement(-0.2f, yoffset);
+//    }else{
+        camera.ProcessMouseMovement(xoffset, yoffset);
+//    }
+}
+
+void MouseScrollCallback(GLFWwindow *window, GLdouble xoffset, GLdouble yoffset){
+    camera.ProcessMouseScroll(yoffset);
 }
 
 void DoMovement(GLFWwindow* window){
