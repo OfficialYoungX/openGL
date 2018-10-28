@@ -3,7 +3,9 @@
 
 #include<GLFW/glfw3.h>
 
-//#include <assimp/>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include"SOIL2/SOIL2.h"
 #include "SOIL2/stb_image.h"
@@ -19,21 +21,26 @@
 #include "glm/gtc/type_ptr.hpp"
 using namespace std;
 //设置窗口大小
-const GLfloat WIDTH = 600, HEIGHT = 600;
+const GLfloat WIDTH = 1000, HEIGHT = 800;
 GLfloat lastX = WIDTH / 2;
 GLfloat lastY = HEIGHT / 2;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 bool keys[1024];
-Camera camera(glm::vec3(1.0f,1.0f,2.0f)); // 相机初始化
+Camera camera(glm::vec3(1.0f,1.0f,1.0f)); // 相机初始化
 bool firstMouse = true; 
 
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
 void MouseCallback(GLFWwindow *window, GLdouble x, GLdouble y);
 void DoMovement(GLFWwindow *window);
 void MouseScrollCallback(GLFWwindow *window, GLdouble xoffset, GLdouble yoffset);
+void MousePosition(GLFWwindow *window, GLdouble x, GLdouble y);
+void BackToStatus();
 
-glm::vec3 lightPos = glm::vec3(1.0f,0.0f,2.0f); // 光源位置
+glm::vec3 lightPos_1 = glm::vec3(1.0f,0.0f,2.0f); // 光源1位置
+glm::vec3 lightPos_2 = glm::vec3(-1.0f,0.0f,2.0f); // 光源2位置
+
+//camera.Position =
 
 int main()
 {
@@ -52,7 +59,8 @@ int main()
     glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
     glfwSetKeyCallback(window, KeyCallback); // 注册键盘事件
     glfwSetCursorPosCallback(window, MouseCallback); // 注册鼠标d移动事件
-    glfwSetScrollCallback(window, MouseScrollCallback);
+    glfwSetScrollCallback(window, MouseScrollCallback); // 注册鼠标滚动事件
+//    glfwSetCursorPosCallback(window, MousePosition);
     //判断窗口是否创建成功
     if (nullptr == window)
     {
@@ -73,7 +81,8 @@ int main()
     glViewport(0, 0, screenWidth, screenHeight);
     
     Shader lightingShader = Shader("shader/core.vs", "shader/core.frag");
-    Shader lampShader = Shader("shader/light.vs", "shader/light.frag");
+    Shader lampShader_1 = Shader("shader/light.vs", "shader/light.frag");
+    Shader lampShader_2 = Shader("shader/light2.vs", "shader/light2.frag");
     
     GLfloat vertices[] = {
         //position_1             // 法向量
@@ -137,9 +146,9 @@ int main()
     glBindVertexArray(0);
     
     // Then, we set the light's VAO (VBO stays the same. After all, the vertices are the same for the light object (also a 3D cube))
-    GLuint lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-    glBindVertexArray(lightVAO);
+    GLuint lightVAO[2];
+    glGenVertexArrays(1, &lightVAO[0]);
+    glBindVertexArray(lightVAO[0]);
     // We only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need.
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Set the vertex attributes (only position data for the lamp))
@@ -147,6 +156,15 @@ int main()
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
     
+    // The second light
+    glGenVertexArrays(1, &lightVAO[1]);
+    glBindVertexArray(lightVAO[1]);
+    // We only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need.
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // Set the vertex attributes (only position data for the lamp))
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0); // Note that we skip over the normal vectors
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
     
     // Game loop
     while (!glfwWindowShouldClose(window))
@@ -161,23 +179,30 @@ int main()
         DoMovement(window);
         
         // Clear the colorbuffer
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         
         
-        // change the light position
+        // change the light_1 position
         float radius = 2.0f;
-        lightPos.x = radius * sin(glfwGetTime());
-        lightPos.z = radius * cos(glfwGetTime());
+        lightPos_1.x = radius * sin(glfwGetTime());
+        lightPos_1.z = radius * cos(glfwGetTime());
+        
+        // change the light_2 position
+        lightPos_2.y = radius * sin(glfwGetTime());
         // Use cooresponding shader when setting uniforms/drawing objects
         lightingShader.Use();
         GLint objectColorLoc = glGetUniformLocation(lightingShader.Program, "objectColor");
-        GLint lightColorLoc  = glGetUniformLocation(lightingShader.Program, "lightColor");
-        GLint lightPosLoc    = glGetUniformLocation(lightingShader.Program, "lightPos");
-        glUniform3f(objectColorLoc, 0.0f, 1.0f, 1.0f);
-        glUniform3f(lightColorLoc,  1.0f, 1.0f, 1.0f);
-        glUniform3f(lightPosLoc,    lightPos.x, lightPos.y, lightPos.z);
+        GLint lightColorLoc_1  = glGetUniformLocation(lightingShader.Program, "lightColor_1");
+        GLint lightColorLoc_2  = glGetUniformLocation(lightingShader.Program, "lightColor_2");
+        GLint lightPosLoc_1    = glGetUniformLocation(lightingShader.Program, "lightPos_1");
+        GLint lightPosLoc_2    = glGetUniformLocation(lightingShader.Program, "lightPos_2");
+        glUniform3f(objectColorLoc, 1.0f, 1.0f, 1.0f); // 白色物体
+        glUniform3f(lightColorLoc_1,  1.0f, 1.0f, 1.0f); // 白色光源
+        glUniform3f(lightColorLoc_2,  0.0f, 1.0f, 1.0f); // 青色光源
+        glUniform3f(lightPosLoc_1,    lightPos_1.x, lightPos_1.y, lightPos_1.z);
+        glUniform3f(lightPosLoc_2,    lightPos_2.x, lightPos_2.y, lightPos_2.z);
         
         
         // Create camera transformations
@@ -202,24 +227,47 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         
+        // ------------------------------------------------------------------------------------
         // Also draw the lamp object, again binding the appropriate shader
-        lampShader.Use();
+        lampShader_1.Use();
         // Get location objects for the matrices on the lamp shader (these could be different on a different shader)
-        modelLoc = glGetUniformLocation(lampShader.Program, "model");
-        viewLoc  = glGetUniformLocation(lampShader.Program, "view");
-        projLoc  = glGetUniformLocation(lampShader.Program, "projection");
+        modelLoc = glGetUniformLocation(lampShader_1.Program, "model");
+        viewLoc  = glGetUniformLocation(lampShader_1.Program, "view");
+        projLoc  = glGetUniformLocation(lampShader_1.Program, "projection");
         // Set matrices
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         
         model = glm::mat4();
-        model = glm::translate(model, lightPos);
+        model = glm::translate(model, lightPos_1);
         model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         // Draw the light object (using light's vertex attributes)
-        glBindVertexArray(lightVAO);
+        glBindVertexArray(lightVAO[0]);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
+        
+        // ------------------------------------------------------------------------------------
+        
+        lampShader_2.Use();
+        // Get location objects for the matrices on the lamp shader (these could be different on a different shader)
+        modelLoc = glGetUniformLocation(lampShader_2.Program, "model");
+        viewLoc  = glGetUniformLocation(lampShader_2.Program, "view");
+        projLoc  = glGetUniformLocation(lampShader_2.Program, "projection");
+        // Set matrices
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        
+        model = glm::mat4();
+        model = glm::translate(model, lightPos_2);
+        model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        // Draw the light object (using light's vertex attributes)
+        glBindVertexArray(lightVAO[1]);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        
+        // ------------------------------------------------------------------------------------
         
         // Swap the screen buffers
         glfwSwapBuffers(window);
@@ -242,6 +290,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
     }
 }
 
+void MousePosition(GLFWwindow *window, GLdouble x, GLdouble y){
+    lightPos_1.x = x/WIDTH;
+    lightPos_1.y = y/HEIGHT;
+}
+
 void MouseCallback(GLFWwindow *window, GLdouble x, GLdouble y){
     if(firstMouse)
     {
@@ -256,15 +309,16 @@ void MouseCallback(GLFWwindow *window, GLdouble x, GLdouble y){
     lastX = x;
     lastY = y;
     
-//    if(xoffset < 0.1){
-//        camera.ProcessMouseMovement(-0.2f, yoffset);
-//    }else{
-        camera.ProcessMouseMovement(xoffset, yoffset);
-//    }
+    camera.ProcessMouseMovement(xoffset*3, yoffset*2);
 }
 
 void MouseScrollCallback(GLFWwindow *window, GLdouble xoffset, GLdouble yoffset){
     camera.ProcessMouseScroll(yoffset);
+}
+
+void BackToStatus(){
+    camera.Position = glm::vec3(1.0f,1.0f,1.0f); // reset the camera position
+    camera.Zoom = 45.0f; // reset the zoom value
 }
 
 void DoMovement(GLFWwindow* window){
@@ -276,4 +330,7 @@ void DoMovement(GLFWwindow* window){
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
+        BackToStatus();
 }
+
