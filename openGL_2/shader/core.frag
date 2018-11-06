@@ -25,7 +25,7 @@ void main()
     float diff_2 = max(dot(norm,lightDir_2),0.0f); // 系数最小为0，即光源没有影响
     vec3 diffuse_1 = diffuseStrength * lightColor_1 * diff_1;
     vec3 diffuse_2 = diffuseStrength * lightColor_2 * diff_2;
-//    // specular 镜面反射
+    // specular 镜面反射
     float specularStrength = 0.5f;
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir_1 = reflect(-lightDir_1, norm);

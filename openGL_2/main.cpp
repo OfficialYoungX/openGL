@@ -333,4 +333,3 @@ void DoMovement(GLFWwindow* window){
     if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
         BackToStatus();
 }
-
